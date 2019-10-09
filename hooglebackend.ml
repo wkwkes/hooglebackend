@@ -31,8 +31,8 @@ let format_marked_list mark list =
 let rec format_path path =
   match path with
     Path.Pident ident ->
-      format_marked_list "Pident" [format_escaped_string ident.Ident.name]
-  | Path.Pdot (p, field, _) ->
+      format_marked_list "Pident" [format_escaped_string @@ Ident.name ident]
+  | Path.Pdot (p, field) ->
       format_marked_list "Pdot" [format_path p; format_escaped_string field]
   | Path.Papply (p, p') ->
       format_marked_list "Papply" [format_path p; format_path p']
@@ -74,7 +74,7 @@ let rec format_type ty =
 
 let format_constructor_field field =
   format_marked_list "field"
-    [format_escaped_string field.Types.ld_id.Ident.name;
+    [format_escaped_string @@ Ident.name field.Types.ld_id;
      format_type field.Types.ld_type]
 
 let format_constructor_args args =
@@ -86,12 +86,12 @@ let format_constructor_args args =
 
 let format_constructor decl =
   format_marked_list "constructor"
-    [format_escaped_string decl.Types.cd_id.Ident.name;
+    [format_escaped_string @@ Ident.name decl.Types.cd_id;
      format_constructor_args decl.Types.cd_args]
 
 let format_label l =
   format_marked_list "label"
-    [format_escaped_string l.Types.ld_id.Ident.name;
+    [format_escaped_string @@ Ident.name l.Types.ld_id;
      format_type l.Types.ld_type]
 
 let format_type_kind type_kind =
@@ -117,18 +117,18 @@ let format_option f o =
 
 let rec format_item item =
   match item with
-    Types.Sig_value (name, descr) ->
+    Types.Sig_value (name, descr, _) ->
       format_marked_list "Sig_value"
-        [format_escaped_string name.Ident.name;
+        [format_escaped_string @@ Ident.name name;
          format_type descr.Types.val_type]
-  | Types.Sig_type (name, decl, _) ->
+  | Types.Sig_type (name, decl, _, _) ->
       format_marked_list "Sig_type"
-        [format_escaped_string name.Ident.name;
+        [format_escaped_string @@ Ident.name name;
          (fun fmt -> Format.fprintf fmt "%d" decl.Types.type_arity);
          format_type_kind decl]
-  | Types.Sig_module (name, decl, _) ->
+  | Types.Sig_module (name, _, decl, _, _) ->
       format_marked_list "Sig_module"
-        [format_escaped_string name.Ident.name;
+        [format_escaped_string @@ Ident.name name;
          format_module_signature decl.Types.md_type]
   | _ ->
       format_marked_list "Sig_unknown" []
@@ -139,10 +139,10 @@ and format_module_signature ty =
     Types.Mty_signature s -> format_signature s
   | Types.Mty_functor (id, ty', ty'') ->
       format_marked_list "Mty_functor"
-        [format_escaped_string id.Ident.name;
+        [format_escaped_string @@ Ident.name id;
          format_option format_module_signature ty';
          format_module_signature ty'']
-  | Types.Mty_alias (_, p) ->
+  | Types.Mty_alias p ->
       format_marked_list "Mty_alias" [format_path p]
   | _ ->
       format_marked_list "Mty_unknown" []
